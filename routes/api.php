@@ -10,6 +10,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\HospitalController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatsController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Route nommée pour le lien de reset dans l'email
@@ -38,6 +39,11 @@ Route::middleware('auth:sanctum')->group(function () {
             ->middleware(['signed'])
             ->name('verification.verify');
     });
+
+    // User (profil)
+    Route::get('/user',                     [UserController::class, 'show']);
+    Route::put('/user',                     [UserController::class, 'update']);
+    Route::put('/user/password',            [UserController::class, 'updatePassword']);
 
     // Shifts (gardes)
     Route::get('/shifts',                   [ShiftController::class, 'index']);
