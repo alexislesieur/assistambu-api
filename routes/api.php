@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\InterventionController;
+use App\Http\Controllers\ItemController;
 use Illuminate\Support\Facades\Route;
 
 // Route nommée pour le lien de reset dans l'email
@@ -36,17 +37,26 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Shifts (gardes)
-    Route::get('/shifts',                [ShiftController::class, 'index']);
-    Route::post('/shifts',               [ShiftController::class, 'store']);
-    Route::get('/shifts/{shift}',        [ShiftController::class, 'show']);
-    Route::post('/shifts/{shift}/end',   [ShiftController::class, 'end']);
-    Route::delete('/shifts/{shift}',     [ShiftController::class, 'destroy']);
+    Route::get('/shifts',                   [ShiftController::class, 'index']);
+    Route::post('/shifts',                  [ShiftController::class, 'store']);
+    Route::get('/shifts/{shift}',           [ShiftController::class, 'show']);
+    Route::post('/shifts/{shift}/end',      [ShiftController::class, 'end']);
+    Route::delete('/shifts/{shift}',        [ShiftController::class, 'destroy']);
 
     // Interventions
-    Route::get('/interventions',                        [InterventionController::class, 'index']);
-    Route::post('/interventions',                       [InterventionController::class, 'store']);
-    Route::get('/interventions/{intervention}',         [InterventionController::class, 'show']);
-    Route::delete('/interventions/{intervention}',      [InterventionController::class, 'destroy']);
-    Route::get('/shifts/{shift}/interventions',         [InterventionController::class, 'byShift']);
+    Route::get('/interventions',                    [InterventionController::class, 'index']);
+    Route::post('/interventions',                   [InterventionController::class, 'store']);
+    Route::get('/interventions/{intervention}',     [InterventionController::class, 'show']);
+    Route::delete('/interventions/{intervention}',  [InterventionController::class, 'destroy']);
+    Route::get('/shifts/{shift}/interventions',     [InterventionController::class, 'byShift']);
+
+    // Items (sac)
+    Route::get('/items',                    [ItemController::class, 'index']);
+    Route::post('/items',                   [ItemController::class, 'store']);
+    Route::get('/items/alerts',             [ItemController::class, 'alerts']);
+    Route::get('/items/{item}',             [ItemController::class, 'show']);
+    Route::put('/items/{item}',             [ItemController::class, 'update']);
+    Route::delete('/items/{item}',          [ItemController::class, 'destroy']);
+    Route::post('/items/{item}/restock',    [ItemController::class, 'restock']);
 
 });

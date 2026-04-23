@@ -42,7 +42,7 @@ class Item extends Model
     public function isExpiringSoon(): bool
     {
         if (!$this->dlc) return false;
-        return $this->dlc->diffInDays(now()) <= 30;
+        return now()->diffInDays($this->dlc) <= 30 && !$this->isExpired();
     }
 
     public function isExpired(): bool

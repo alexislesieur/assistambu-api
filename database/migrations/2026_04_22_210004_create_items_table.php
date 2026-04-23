@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('nom');
-            $table->enum('categorie', ['oxygenotherapie', 'pansements', 'immobilisation', 'medicaments', 'consommables']);
+            $table->string('name');
+            $table->enum('category', ['oxygenotherapy', 'dressings', 'immobilization', 'medications', 'consumables']);
             $table->integer('quantity')->default(0);
             $table->integer('max_quantity')->default(0);
             $table->date('dlc')->nullable();
