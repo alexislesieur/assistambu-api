@@ -19,7 +19,16 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+    'allowed_origins' => [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
+        'https://auth.assist-ambu.fr',
+        'https://app.assist-ambu.fr',
+        'https://admin.assist-ambu.fr',
+        'https://www.assist-ambu.fr',
+        'https://assist-ambu.fr',
+    ],
 
     'allowed_origins_patterns' => [],
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\HospitalController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 // Route nommée pour le lien de reset dans l'email
@@ -31,6 +32,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/reset-password',  [ResetPasswordController::class, 'reset']);
 });
 
+// Waitlist — publique
+Route::post('/waitlist', [WaitlistController::class, 'store']);
+
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -46,6 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user',             [UserController::class, 'show']);
     Route::put('/user',             [UserController::class, 'update']);
     Route::put('/user/password',    [UserController::class, 'updatePassword']);
+
+    // Waitlist (admin)
+    Route::get('/waitlist', [WaitlistController::class, 'index']);
 
     // Shifts (gardes)
     Route::get('/shifts',                   [ShiftController::class, 'index']);
