@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class EmailVerificationController extends Controller
 {
@@ -13,33 +14,39 @@ class EmailVerificationController extends Controller
     public function send(Request $request)
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'Email déjà vérifié.',
-            ]);
+            return response()->json(['message' => 'Email déjà vérifié.']);
         }
 
         $request->user()->sendEmailVerificationNotification();
 
-        return response()->json([
-            'message' => 'Email de vérification envoyé.',
-        ]);
+        return response()->json(['message' => 'Email de vérification envoyé.']);
     }
 
-    // Vérifier l'email via le lien
-    public function verify(EmailVerificationRequest $request)
+    // Vérifier l'email — accessible sans session, vérifie signature manuellement
+    public function verify(Request $request, $id, $hash)
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'Email déjà vérifié.',
-            ]);
+        $frontUrl = env('FRONTEND_AUTH_URL', 'http://localhost:5175');
+
+        // Vérifier la signature de l'URL
+        if (!URL::hasValidSignature($request)) {
+            return redirect($frontUrl . '/verify-email?error=invalid');
         }
 
-        if ($request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
+        $user = User::findOrFail($id);
+
+        // Vérifier le hash
+        if (!hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+            return redirect($frontUrl . '/verify-email?error=invalid');
         }
 
-        return response()->json([
-            'message' => 'Email vérifié avec succès.',
-        ]);
+        if ($user->hasVerifiedEmail()) {
+            return redirect($frontUrl . '/verify-email/success?already=1');
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return redirect($frontUrl . '/verify-email/success');
     }
 }

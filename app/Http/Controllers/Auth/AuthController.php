@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -24,6 +25,8 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'role'     => 'user',
         ]);
+
+        event(new Registered($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -46,6 +49,13 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['Les identifiants sont incorrects.'],
             ]);
+        }
+
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Veuillez vérifier votre adresse email avant de vous connecter.',
+                'email_unverified' => true,
+            ], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

@@ -18,6 +18,11 @@ Route::get('/auth/reset-password/{token}', function (string $token) {
     return response()->json(['token' => $token]);
 })->name('password.reset');
 
+// Vérification email — publique, pas de session requise
+Route::get('/auth/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['signed'])
+    ->name('verification.verify');
+
 // Routes publiques
 Route::prefix('auth')->group(function () {
     Route::post('/register',        [AuthController::class, 'register']);
@@ -31,19 +36,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
     Route::prefix('auth')->group(function () {
-        Route::post('/logout',                  [AuthController::class, 'logout']);
-        Route::get('/me',                       [AuthController::class, 'me']);
-        Route::delete('/account',               [AuthController::class, 'destroy']);
-        Route::post('/email/verify/send',       [EmailVerificationController::class, 'send']);
-        Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-            ->middleware(['signed'])
-            ->name('verification.verify');
+        Route::post('/logout',              [AuthController::class, 'logout']);
+        Route::get('/me',                   [AuthController::class, 'me']);
+        Route::delete('/account',           [AuthController::class, 'destroy']);
+        Route::post('/email/verify/send',   [EmailVerificationController::class, 'send']);
     });
 
     // User (profil)
-    Route::get('/user',                     [UserController::class, 'show']);
-    Route::put('/user',                     [UserController::class, 'update']);
-    Route::put('/user/password',            [UserController::class, 'updatePassword']);
+    Route::get('/user',             [UserController::class, 'show']);
+    Route::put('/user',             [UserController::class, 'update']);
+    Route::put('/user/password',    [UserController::class, 'updatePassword']);
 
     // Shifts (gardes)
     Route::get('/shifts',                   [ShiftController::class, 'index']);
