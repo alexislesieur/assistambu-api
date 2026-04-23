@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\HospitalController;
 use Illuminate\Support\Facades\Route;
 
 // Route nommée pour le lien de reset dans l'email
@@ -59,5 +60,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/items/{item}',             [ItemController::class, 'update']);
     Route::delete('/items/{item}',          [ItemController::class, 'destroy']);
     Route::post('/items/{item}/restock',    [ItemController::class, 'restock']);
+
+    // Hospitals
+    Route::get('/hospitals',                [HospitalController::class, 'index']);
+    Route::get('/hospitals/{hospital}',     [HospitalController::class, 'show']);
+    Route::post('/hospitals',               [HospitalController::class, 'store']);
+    Route::put('/hospitals/{hospital}',     [HospitalController::class, 'update']);
+    Route::delete('/hospitals/{hospital}',  [HospitalController::class, 'destroy']);
 
 });
