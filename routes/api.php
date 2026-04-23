@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\InterventionController;
 use Illuminate\Support\Facades\Route;
 
 // Route nommée pour le lien de reset dans l'email
@@ -40,5 +41,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/shifts/{shift}',        [ShiftController::class, 'show']);
     Route::post('/shifts/{shift}/end',   [ShiftController::class, 'end']);
     Route::delete('/shifts/{shift}',     [ShiftController::class, 'destroy']);
+
+    // Interventions
+    Route::get('/interventions',                        [InterventionController::class, 'index']);
+    Route::post('/interventions',                       [InterventionController::class, 'store']);
+    Route::get('/interventions/{intervention}',         [InterventionController::class, 'show']);
+    Route::delete('/interventions/{intervention}',      [InterventionController::class, 'destroy']);
+    Route::get('/shifts/{shift}/interventions',         [InterventionController::class, 'byShift']);
 
 });

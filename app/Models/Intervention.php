@@ -12,11 +12,11 @@ class Intervention extends Model
     protected $fillable = [
         'shift_id',
         'user_id',
-        'categorie',
+        'category',
         'patient_gender',
         'patient_age',
-        'gestes',
-        'conduite',
+        'gestures',
+        'driving',
         'no_transport',
         'hospital_id',
     ];
@@ -24,13 +24,13 @@ class Intervention extends Model
     protected function casts(): array
     {
         return [
-            'gestes'         => 'array',
+            'gestures'     => 'array',
             'no_transport' => 'boolean',
-            'patient_age'    => 'integer',
+            'patient_age'  => 'integer',
         ];
     }
 
-    public function garde()
+    public function shift()
     {
         return $this->belongsTo(Shift::class);
     }
@@ -47,8 +47,8 @@ class Intervention extends Model
 
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'intervention_items')
-                    ->withPivot('quantite_utilisee')
+        return $this->belongsToMany(Item::class, 'intervention_items', 'intervention_id', 'article_id')
+                    ->withPivot('quantity_used')
                     ->withTimestamps();
     }
 }

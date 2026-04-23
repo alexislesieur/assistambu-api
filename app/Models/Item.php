@@ -11,8 +11,8 @@ class Item extends Model
 
     protected $fillable = [
         'user_id',
-        'nom',
-        'categorie',
+        'name',
+        'category',
         'quantity',
         'max_quantity',
         'dlc',
@@ -34,12 +34,12 @@ class Item extends Model
 
     public function interventions()
     {
-        return $this->belongsToMany(Intervention::class, 'intervention_items')
-                    ->withPivot('quantite_utilisee')
+        return $this->belongsToMany(Intervention::class, 'intervention_items', 'article_id', 'intervention_id')
+                    ->withPivot('quantity_used')
                     ->withTimestamps();
     }
 
-    public function isExpiringsSoon(): bool
+    public function isExpiringSoon(): bool
     {
         if (!$this->dlc) return false;
         return $this->dlc->diffInDays(now()) <= 30;
@@ -53,11 +53,11 @@ class Item extends Model
 
     public function isLowStock(): bool
     {
-        return $this->quantite > 0 && $this->quantite < $this->quantite_max;
+        return $this->quantity > 0 && $this->quantity < $this->max_quantity;
     }
 
     public function isOutOfStock(): bool
     {
-        return $this->quantite === 0;
+        return $this->quantity === 0;
     }
 }

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('intervention_id')->constrained()->cascadeOnDelete();
             $table->foreignId('article_id')->constrained('items')->cascadeOnDelete();
-            $table->integer('quantite_utilisee');
+            $table->integer('quantity_used');
             $table->timestamps();
         });
     }

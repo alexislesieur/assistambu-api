@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::create('interventions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('shift_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('shift_id')->constrained('shifts')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('categorie', ['respi', 'cardio', 'trauma', 'neuro', 'pedia', 'general']);
-            $table->enum('patient_gender', ['masculin', 'feminin']);
+            $table->enum('category', ['respi', 'cardio', 'trauma', 'neuro', 'pedia', 'general']);
+            $table->enum('patient_gender', ['male', 'female']);
             $table->tinyInteger('patient_age')->unsigned();
-            $table->json('gestes')->nullable();
-            $table->enum('conduite', ['aller', 'retour', 'aller_retour', 'aucun'])->default('aucun');
+            $table->json('gestures')->nullable();
+            $table->enum('driving', ['outbound', 'return', 'round_trip', 'none'])->default('none');
             $table->boolean('no_transport')->default(false);
             $table->foreignId('hospital_id')->nullable()->constrained('hospitals')->nullOnDelete();
             $table->timestamps();
