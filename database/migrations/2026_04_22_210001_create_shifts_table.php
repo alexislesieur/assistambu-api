@@ -14,6 +14,7 @@ return new class extends Migration
             $table->dateTime('started_at');
             $table->dateTime('ended_at')->nullable();
             $table->boolean('driver')->default(false);
+            $table->integer('break_minutes')->nullable();
             $table->timestamps();
         });
     }

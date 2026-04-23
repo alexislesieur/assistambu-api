@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('service_type', ['uph_nuit', 'uph_jour', 'transport', 'formation', 'repos', 'conge']);
+            $table->enum('service_type', ['uph_night', 'uph_day', 'transport', 'training', 'day_off', 'vacation']);
             $table->date('date');
-            $table->time('heure_debut');
-            $table->time('heure_fin');
+            $table->time('start_time');
+            $table->time('end_time');
             $table->timestamps();
         });
     }

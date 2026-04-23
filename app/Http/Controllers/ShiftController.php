@@ -12,7 +12,8 @@ class ShiftController extends Controller
     {
         $shifts = Shift::where('user_id', $request->user()->id)
             ->orderBy('started_at', 'desc')
-            ->get();
+            ->get()
+            ->map(fn($shift) => $this->formatShift($shift));
 
         return response()->json($shifts);
     }
@@ -42,7 +43,7 @@ class ShiftController extends Controller
             'driver'     => $validated['driver'],
         ]);
 
-        return response()->json($shift, 201);
+        return response()->json($this->formatShift($shift), 201);
     }
 
     // Afficher une garde
@@ -52,7 +53,7 @@ class ShiftController extends Controller
             return response()->json(['message' => 'Non autorisé.'], 403);
         }
 
-        return response()->json($shift->load('interventions'));
+        return response()->json($this->formatShift($shift->load('interventions')));
     }
 
     // Terminer une garde
@@ -66,9 +67,16 @@ class ShiftController extends Controller
             return response()->json(['message' => 'Cette garde est déjà terminée.'], 422);
         }
 
-        $shift->update(['ended_at' => now()]);
+        $validated = $request->validate([
+            'break_minutes' => 'nullable|integer|min:0',
+        ]);
 
-        return response()->json($shift);
+        $shift->update([
+            'ended_at'      => now(),
+            'break_minutes' => $validated['break_minutes'] ?? 0,
+        ]);
+
+        return response()->json($this->formatShift($shift));
     }
 
     // Supprimer une garde
@@ -81,5 +89,17 @@ class ShiftController extends Controller
         $shift->delete();
 
         return response()->json(['message' => 'Garde supprimée.']);
+    }
+
+    // Formater une garde avec les calculs
+    private function formatShift(Shift $shift): array
+    {
+        return [
+            ...$shift->toArray(),
+            'amplitude'         => $shift->amplitudeFormatted(),
+            'amplitude_minutes' => $shift->amplitudeMinutes(),
+            'tte'               => $shift->tteFormatted(),
+            'tte_minutes'       => $shift->tteMinutes(),
+        ];
     }
 }

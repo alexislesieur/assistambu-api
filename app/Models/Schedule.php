@@ -13,8 +13,8 @@ class Schedule extends Model
         'user_id',
         'service_type',
         'date',
-        'heure_debut',
-        'heure_fin',
+        'start_time',
+        'end_time',
     ];
 
     protected function casts(): array

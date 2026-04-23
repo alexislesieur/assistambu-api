@@ -8,6 +8,8 @@ use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\HospitalController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\StatsController;
 use Illuminate\Support\Facades\Route;
 
 // Route nommée pour le lien de reset dans l'email
@@ -67,5 +69,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/hospitals',               [HospitalController::class, 'store']);
     Route::put('/hospitals/{hospital}',     [HospitalController::class, 'update']);
     Route::delete('/hospitals/{hospital}',  [HospitalController::class, 'destroy']);
+
+    // Schedules (planning)
+    Route::get('/schedules',                [ScheduleController::class, 'index']);
+    Route::get('/schedules/month',          [ScheduleController::class, 'byMonth']);
+    Route::get('/schedules/week',           [ScheduleController::class, 'byWeek']);
+    Route::post('/schedules',               [ScheduleController::class, 'store']);
+    Route::get('/schedules/{schedule}',     [ScheduleController::class, 'show']);
+    Route::put('/schedules/{schedule}',     [ScheduleController::class, 'update']);
+    Route::delete('/schedules/{schedule}',  [ScheduleController::class, 'destroy']);
+
+    // Stats
+    Route::get('/stats/day',    [StatsController::class, 'day']);
+    Route::get('/stats/week',   [StatsController::class, 'week']);
+    Route::get('/stats/month',  [StatsController::class, 'month']);
 
 });
