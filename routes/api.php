@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/interventions',                    [InterventionController::class, 'index']);
     Route::post('/interventions',                   [InterventionController::class, 'store']);
     Route::get('/interventions/{intervention}',     [InterventionController::class, 'show']);
+    Route::put('/interventions/{intervention}',     [InterventionController::class, 'update']);
     Route::delete('/interventions/{intervention}',  [InterventionController::class, 'destroy']);
     Route::get('/shifts/{shift}/interventions',     [InterventionController::class, 'byShift']);
 

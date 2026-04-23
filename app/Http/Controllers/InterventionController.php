@@ -39,16 +39,16 @@ class InterventionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'shift_id'      => 'required|exists:shifts,id',
-            'category'      => 'required|in:respi,cardio,trauma,neuro,pedia,general',
-            'patient_gender'=> 'required|in:male,female',
-            'patient_age'   => 'required|integer|min:0|max:120',
-            'gestures'      => 'nullable|array',
-            'driving'       => 'required|in:outbound,return,round_trip,none',
-            'no_transport'  => 'required|boolean',
-            'hospital_id'   => 'nullable|exists:hospitals,id',
-            'items'         => 'nullable|array',
-            'items.*.id'    => 'required|exists:items,id',
+            'shift_id'       => 'required|exists:shifts,id',
+            'category'       => 'required|in:respi,cardio,trauma,neuro,pedia,general',
+            'patient_gender' => 'required|in:male,female',
+            'patient_age'    => 'required|integer|min:0|max:120',
+            'gestures'       => 'nullable|array',
+            'driving'        => 'required|in:outbound,return,round_trip,none',
+            'no_transport'   => 'required|boolean',
+            'hospital_id'    => 'nullable|exists:hospitals,id',
+            'items'          => 'nullable|array',
+            'items.*.id'     => 'required|exists:items,id',
             'items.*.quantity_used' => 'required|integer|min:1',
         ]);
 
@@ -89,14 +89,13 @@ class InterventionController extends Controller
                     ->first();
 
                 if ($item) {
-                    // Attacher à l'intervention
                     $intervention->items()->attach($item->id, [
                         'quantity_used' => $itemData['quantity_used'],
                     ]);
 
-                    // Déduire du sac
-                    $newQuantity = max(0, $item->quantity - $itemData['quantity_used']);
-                    $item->update(['quantity' => $newQuantity]);
+                    $item->update([
+                        'quantity' => max(0, $item->quantity - $itemData['quantity_used']),
+                    ]);
                 }
             }
         }
@@ -112,6 +111,28 @@ class InterventionController extends Controller
         }
 
         return response()->json($intervention->load(['shift', 'hospital', 'items']));
+    }
+
+    // Modifier une intervention
+    public function update(Request $request, Intervention $intervention)
+    {
+        if ($intervention->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Non autorisé.'], 403);
+        }
+
+        $validated = $request->validate([
+            'category'       => 'sometimes|in:respi,cardio,trauma,neuro,pedia,general',
+            'patient_gender' => 'sometimes|in:male,female',
+            'patient_age'    => 'sometimes|integer|min:0|max:120',
+            'gestures'       => 'nullable|array',
+            'driving'        => 'sometimes|in:outbound,return,round_trip,none',
+            'no_transport'   => 'sometimes|boolean',
+            'hospital_id'    => 'nullable|exists:hospitals,id',
+        ]);
+
+        $intervention->update($validated);
+
+        return response()->json($intervention->load(['hospital', 'items']));
     }
 
     // Supprimer une intervention
