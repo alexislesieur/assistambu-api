@@ -12,14 +12,15 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WaitlistController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
-// Route nommée pour le lien de reset dans l'email
+// Route nommée pour le lien de reset
 Route::get('/auth/reset-password/{token}', function (string $token) {
     return response()->json(['token' => $token]);
 })->name('password.reset');
 
-// Vérification email — publique, pas de session requise
+// Vérification email — publique
 Route::get('/auth/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
     ->middleware(['signed'])
     ->name('verification.verify');
@@ -51,10 +52,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user',             [UserController::class, 'update']);
     Route::put('/user/password',    [UserController::class, 'updatePassword']);
 
-    // Waitlist (admin)
-    Route::get('/waitlist', [WaitlistController::class, 'index']);
+    // Waitlist
+    Route::get('/waitlist',              [WaitlistController::class, 'index']);
+    Route::post('/waitlist/admin',       [WaitlistController::class, 'adminStore']);
+    Route::delete('/waitlist/{id}',      [WaitlistController::class, 'destroy']);
 
-    // Shifts (gardes)
+    // Shifts
     Route::get('/shifts',                   [ShiftController::class, 'index']);
     Route::post('/shifts',                  [ShiftController::class, 'store']);
     Route::get('/shifts/{shift}',           [ShiftController::class, 'show']);
@@ -69,7 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/interventions/{intervention}',  [InterventionController::class, 'destroy']);
     Route::get('/shifts/{shift}/interventions',     [InterventionController::class, 'byShift']);
 
-    // Items (sac)
+    // Items
     Route::get('/items',                    [ItemController::class, 'index']);
     Route::post('/items',                   [ItemController::class, 'store']);
     Route::get('/items/alerts',             [ItemController::class, 'alerts']);
@@ -85,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/hospitals/{hospital}',     [HospitalController::class, 'update']);
     Route::delete('/hospitals/{hospital}',  [HospitalController::class, 'destroy']);
 
-    // Schedules (planning)
+    // Schedules
     Route::get('/schedules',                [ScheduleController::class, 'index']);
     Route::get('/schedules/month',          [ScheduleController::class, 'byMonth']);
     Route::get('/schedules/week',           [ScheduleController::class, 'byWeek']);
@@ -98,5 +101,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stats/day',    [StatsController::class, 'day']);
     Route::get('/stats/week',   [StatsController::class, 'week']);
     Route::get('/stats/month',  [StatsController::class, 'month']);
+
+    // ===== ADMIN =====
+    Route::prefix('admin')->group(function () {
+        Route::get('/stats',                    [AdminController::class, 'stats']);
+        Route::get('/users',                    [AdminController::class, 'users']);
+        Route::put('/users/{user}',             [AdminController::class, 'updateUser']);
+        Route::delete('/users/{user}',          [AdminController::class, 'destroyUser']);
+        Route::get('/shifts',                   [AdminController::class, 'shifts']);
+        Route::get('/interventions',            [AdminController::class, 'interventions']);
+        Route::get('/items',                    [AdminController::class, 'items']);
+    });
 
 });
