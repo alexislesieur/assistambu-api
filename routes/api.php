@@ -104,14 +104,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ===== ADMIN =====
     Route::prefix('admin')->group(function () {
-        Route::get('/stats',                            [AdminController::class, 'stats']);
-        Route::get('/users',                            [AdminController::class, 'users']);
-        Route::put('/users/{user}',                     [AdminController::class, 'updateUser']);
-        Route::delete('/users/{user}',                  [AdminController::class, 'destroyUser']);
-        Route::post('/users/{user}/reset-password',     [AdminController::class, 'resetPasswordUser']);
-        Route::get('/shifts',                           [AdminController::class, 'shifts']);
-        Route::get('/interventions',                    [AdminController::class, 'interventions']);
-        Route::get('/items',                            [AdminController::class, 'items']);
+        Route::get('/stats',                        [AdminController::class, 'stats']);
+        Route::get('/users',                        [AdminController::class, 'users']);
+        Route::put('/users/{user}',                 [AdminController::class, 'updateUser']);
+        Route::delete('/users/{user}',              [AdminController::class, 'destroyUser']);
+        Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPasswordUser']);
+        Route::get('/shifts',                       [AdminController::class, 'shifts']);
+        Route::get('/interventions',                [AdminController::class, 'interventions']);
+        Route::get('/items',                        [AdminController::class, 'items']);
+        Route::get('/logs',                         [AdminController::class, 'logs']);
     });
 
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\LogService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(protected LogService $log) {}
+
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -29,6 +32,8 @@ class AuthController extends Controller
         event(new Registered($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        $this->log->register($user->id, $user->email);
 
         return response()->json([
             'user'  => $user,
@@ -53,12 +58,20 @@ class AuthController extends Controller
 
         if (!$user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'Veuillez vérifier votre adresse email avant de vous connecter.',
+                'message'          => 'Veuillez vérifier votre adresse email avant de vous connecter.',
                 'email_unverified' => true,
             ], 403);
         }
 
+        if ($user->blocked) {
+            return response()->json([
+                'message' => 'Votre compte a été suspendu. Contactez l\'administrateur.',
+            ], 403);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        $this->log->login($user->id, $user->email);
 
         return response()->json([
             'user'  => $user,
@@ -68,6 +81,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $this->log->logout($request->user()->id);
+
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
