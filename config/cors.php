@@ -26,6 +26,7 @@ return [
         'https://auth.assist-ambu.fr',
         'https://app.assist-ambu.fr',
         'https://admin.assist-ambu.fr',
+        'https://beta.assist-ambu.fr',
         'https://www.assist-ambu.fr',
         'https://assist-ambu.fr',
     ],
