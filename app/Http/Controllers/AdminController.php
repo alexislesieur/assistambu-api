@@ -7,6 +7,8 @@ use App\Models\Shift;
 use App\Models\Intervention;
 use App\Models\Item;
 use App\Models\Waitlist;
+use App\Models\InterventionCategory;
+use App\Models\ItemCategory;
 use App\Services\LogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -27,18 +29,19 @@ class AdminController extends Controller
         return $request->user()->role === 'superadmin';
     }
 
+    // Stats globales dashboard
     public function stats(Request $request)
     {
         $this->checkAdmin($request);
 
         return response()->json([
             'users'         => [
-                'total'     => User::count(),
-                'admins'    => User::where('role', 'admin')->count(),
+                'total'       => User::count(),
+                'admins'      => User::where('role', 'admin')->count(),
                 'superadmins' => User::where('role', 'superadmin')->count(),
-                'beta'      => User::where('role', 'beta')->count(),
-                'verified'  => User::whereNotNull('email_verified_at')->count(),
-                'new_week'  => User::where('created_at', '>=', now()->subDays(7))->count(),
+                'beta'        => User::where('role', 'beta')->count(),
+                'verified'    => User::whereNotNull('email_verified_at')->count(),
+                'new_week'    => User::where('created_at', '>=', now()->subDays(7))->count(),
             ],
             'shifts'        => [
                 'total'     => Shift::count(),
@@ -62,6 +65,7 @@ class AdminController extends Controller
         ]);
     }
 
+    // Utilisateurs
     public function users(Request $request)
     {
         $this->checkAdmin($request);
@@ -88,24 +92,17 @@ class AdminController extends Controller
         $isSuperAdmin = $this->isSuperAdmin($request);
         $currentUser  = $request->user();
 
-        // Seul superadmin peut modifier un superadmin
         if ($user->role === 'superadmin' && !$isSuperAdmin) {
             return response()->json(['message' => 'Seul le super administrateur peut modifier ce compte.'], 422);
         }
-
-        // Seul superadmin peut modifier un admin
         if ($user->role === 'admin' && !$isSuperAdmin) {
             return response()->json(['message' => 'Seul le super administrateur peut modifier un compte administrateur.'], 422);
         }
-
-        // Pas de blocage d'un admin/superadmin sauf par superadmin
         if (in_array($user->role, ['admin', 'superadmin']) && $request->has('blocked') && $request->blocked && !$isSuperAdmin) {
             return response()->json(['message' => 'Impossible de bloquer ce compte.'], 422);
         }
 
-        $allowedRoles = $isSuperAdmin
-            ? ['user', 'beta', 'admin', 'superadmin']
-            : ['user', 'beta'];
+        $allowedRoles = $isSuperAdmin ? ['user', 'beta', 'admin', 'superadmin'] : ['user', 'beta'];
 
         $validated = $request->validate([
             'role'    => 'sometimes|in:' . implode(',', $allowedRoles),
@@ -133,11 +130,9 @@ class AdminController extends Controller
         if ($user->id === $request->user()->id) {
             return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 422);
         }
-
         if ($user->role === 'superadmin') {
             return response()->json(['message' => 'Impossible de supprimer un compte super administrateur.'], 422);
         }
-
         if ($user->role === 'admin' && !$isSuperAdmin) {
             return response()->json(['message' => 'Seul le super administrateur peut supprimer un compte administrateur.'], 422);
         }
@@ -163,41 +158,28 @@ class AdminController extends Controller
         return response()->json(['message' => 'Email de reset envoyé.']);
     }
 
+    // Gardes
     public function shifts(Request $request)
     {
         $this->checkAdmin($request);
-
-        return response()->json(
-            Shift::with('user:id,name,email')
-                ->orderBy('created_at', 'desc')
-                ->limit(200)
-                ->get()
-        );
+        return response()->json(Shift::with('user:id,name,email')->orderBy('created_at', 'desc')->limit(200)->get());
     }
 
+    // Interventions
     public function interventions(Request $request)
     {
         $this->checkAdmin($request);
-
-        return response()->json(
-            Intervention::with(['shift.user:id,name,email'])
-                ->orderBy('created_at', 'desc')
-                ->limit(200)
-                ->get()
-        );
+        return response()->json(Intervention::with(['shift.user:id,name,email'])->orderBy('created_at', 'desc')->limit(200)->get());
     }
 
+    // Articles
     public function items(Request $request)
     {
         $this->checkAdmin($request);
-
-        return response()->json(
-            Item::with('user:id,name,email')
-                ->orderBy('created_at', 'desc')
-                ->get()
-        );
+        return response()->json(Item::with('user:id,name,email')->orderBy('created_at', 'desc')->get());
     }
 
+    // Logs
     public function logs(Request $request)
     {
         $this->checkAdmin($request);
@@ -209,5 +191,96 @@ class AdminController extends Controller
         if ($request->has('user_id')) $query->where('user_id', $request->user_id);
 
         return response()->json($query->limit(500)->get());
+    }
+
+    // ===== CATÉGORIES D'INTERVENTION =====
+
+    public function interventionCategories(Request $request)
+    {
+        $this->checkAdmin($request);
+        return response()->json(InterventionCategory::orderBy('order')->get());
+    }
+
+    public function storeInterventionCategory(Request $request)
+    {
+        $this->checkAdmin($request);
+
+        $validated = $request->validate([
+            'name'  => 'required|string|max:100',
+            'color' => 'required|string',
+            'bg'    => 'required|string',
+        ]);
+
+        $validated['order'] = InterventionCategory::max('order') + 1;
+        $category = InterventionCategory::create($validated);
+
+        return response()->json($category, 201);
+    }
+
+    public function updateInterventionCategory(Request $request, InterventionCategory $category)
+    {
+        $this->checkAdmin($request);
+
+        $validated = $request->validate([
+            'name'   => 'sometimes|string|max:100',
+            'color'  => 'sometimes|string',
+            'bg'     => 'sometimes|string',
+            'active' => 'sometimes|boolean',
+            'order'  => 'sometimes|integer',
+        ]);
+
+        $category->update($validated);
+        return response()->json($category);
+    }
+
+    public function destroyInterventionCategory(Request $request, InterventionCategory $category)
+    {
+        $this->checkAdmin($request);
+        $category->delete();
+        return response()->json(['message' => 'Catégorie supprimée.']);
+    }
+
+    // ===== CATÉGORIES D'ARTICLES =====
+
+    public function itemCategories(Request $request)
+    {
+        $this->checkAdmin($request);
+        return response()->json(ItemCategory::orderBy('order')->get());
+    }
+
+    public function storeItemCategory(Request $request)
+    {
+        $this->checkAdmin($request);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'icon' => 'nullable|string',
+        ]);
+
+        $validated['order'] = ItemCategory::max('order') + 1;
+        $category = ItemCategory::create($validated);
+
+        return response()->json($category, 201);
+    }
+
+    public function updateItemCategory(Request $request, ItemCategory $itemCategory)
+    {
+        $this->checkAdmin($request);
+
+        $validated = $request->validate([
+            'name'  => 'sometimes|string|max:100',
+            'icon'  => 'nullable|string',
+            'order' => 'sometimes|integer',
+        ]);
+
+        $itemCategory->update($validated);
+        return response()->json($itemCategory);
+    }
+
+    public function destroyItemCategory(Request $request, ItemCategory $itemCategory)
+    {
+        $this->checkAdmin($request);
+        $itemCategory->delete();
+        return response()->json(['message' => 'Catégorie supprimée.']);
     }
 }
