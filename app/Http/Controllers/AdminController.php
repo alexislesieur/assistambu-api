@@ -17,9 +17,14 @@ class AdminController extends Controller
 
     private function checkAdmin(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
+        if (!in_array($request->user()->role, ['admin', 'superadmin'])) {
             abort(403, 'Accès refusé.');
         }
+    }
+
+    private function isSuperAdmin(Request $request): bool
+    {
+        return $request->user()->role === 'superadmin';
     }
 
     public function stats(Request $request)
@@ -30,6 +35,8 @@ class AdminController extends Controller
             'users'         => [
                 'total'     => User::count(),
                 'admins'    => User::where('role', 'admin')->count(),
+                'superadmins' => User::where('role', 'superadmin')->count(),
+                'beta'      => User::where('role', 'beta')->count(),
                 'verified'  => User::whereNotNull('email_verified_at')->count(),
                 'new_week'  => User::where('created_at', '>=', now()->subDays(7))->count(),
             ],
@@ -78,25 +85,40 @@ class AdminController extends Controller
     {
         $this->checkAdmin($request);
 
-        if ($user->role === 'admin' && $request->has('blocked') && $request->blocked) {
-            return response()->json(['message' => 'Impossible de bloquer un compte administrateur.'], 422);
+        $isSuperAdmin = $this->isSuperAdmin($request);
+        $currentUser  = $request->user();
+
+        // Seul superadmin peut modifier un superadmin
+        if ($user->role === 'superadmin' && !$isSuperAdmin) {
+            return response()->json(['message' => 'Seul le super administrateur peut modifier ce compte.'], 422);
         }
 
+        // Seul superadmin peut modifier un admin
+        if ($user->role === 'admin' && !$isSuperAdmin) {
+            return response()->json(['message' => 'Seul le super administrateur peut modifier un compte administrateur.'], 422);
+        }
+
+        // Pas de blocage d'un admin/superadmin sauf par superadmin
+        if (in_array($user->role, ['admin', 'superadmin']) && $request->has('blocked') && $request->blocked && !$isSuperAdmin) {
+            return response()->json(['message' => 'Impossible de bloquer ce compte.'], 422);
+        }
+
+        $allowedRoles = $isSuperAdmin
+            ? ['user', 'beta', 'admin', 'superadmin']
+            : ['user', 'beta'];
+
         $validated = $request->validate([
-            'role'    => 'sometimes|in:user,admin',
+            'role'    => 'sometimes|in:' . implode(',', $allowedRoles),
             'name'    => 'sometimes|string|max:255',
             'blocked' => 'sometimes|boolean',
         ]);
 
         $user->update($validated);
 
-        // Log blocage/déblocage
         if (isset($validated['blocked'])) {
-            if ($validated['blocked']) {
-                $this->log->adminUserBlocked($request->user()->id, $user->id, $user->email);
-            } else {
-                $this->log->adminUserUnblocked($request->user()->id, $user->id, $user->email);
-            }
+            $validated['blocked']
+                ? $this->log->adminUserBlocked($currentUser->id, $user->id, $user->email)
+                : $this->log->adminUserUnblocked($currentUser->id, $user->id, $user->email);
         }
 
         return response()->json($user);
@@ -106,12 +128,18 @@ class AdminController extends Controller
     {
         $this->checkAdmin($request);
 
+        $isSuperAdmin = $this->isSuperAdmin($request);
+
         if ($user->id === $request->user()->id) {
             return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 422);
         }
 
-        if ($user->role === 'admin') {
-            return response()->json(['message' => 'Impossible de supprimer un compte administrateur.'], 422);
+        if ($user->role === 'superadmin') {
+            return response()->json(['message' => 'Impossible de supprimer un compte super administrateur.'], 422);
+        }
+
+        if ($user->role === 'admin' && !$isSuperAdmin) {
+            return response()->json(['message' => 'Seul le super administrateur peut supprimer un compte administrateur.'], 422);
         }
 
         $email = $user->email;
@@ -174,23 +202,12 @@ class AdminController extends Controller
     {
         $this->checkAdmin($request);
 
-        $query = \App\Models\Log::with('user:id,name,email')
-            ->orderBy('created_at', 'desc');
+        $query = \App\Models\Log::with('user:id,name,email')->orderBy('created_at', 'desc');
 
-        if ($request->has('level')) {
-            $query->where('level', $request->level);
-        }
+        if ($request->has('level'))   $query->where('level', $request->level);
+        if ($request->has('action'))  $query->where('action', 'like', '%' . $request->action . '%');
+        if ($request->has('user_id')) $query->where('user_id', $request->user_id);
 
-        if ($request->has('action')) {
-            $query->where('action', 'like', '%' . $request->action . '%');
-        }
-
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->user_id);
-        }
-
-        $logs = $query->limit(500)->get();
-
-        return response()->json($logs);
+        return response()->json($query->limit(500)->get());
     }
 }

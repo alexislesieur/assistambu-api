@@ -28,7 +28,7 @@ class WaitlistController extends Controller
     // Liste complète — admin uniquement
     public function index(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
+        if (!in_array($request->user()->role, ['admin', 'superadmin'])) {
             return response()->json(['message' => 'Non autorisé.'], 403);
         }
 
@@ -40,7 +40,7 @@ class WaitlistController extends Controller
     // Ajouter un email manuellement — admin uniquement
     public function adminStore(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
+        if (!in_array($request->user()->role, ['admin', 'superadmin'])) {
             return response()->json(['message' => 'Non autorisé.'], 403);
         }
 
@@ -60,7 +60,7 @@ class WaitlistController extends Controller
     // Supprimer un email — admin uniquement
     public function destroy(Request $request, $id)
     {
-        if ($request->user()->role !== 'admin') {
+        if (!in_array($request->user()->role, ['admin', 'superadmin'])) {
             return response()->json(['message' => 'Non autorisé.'], 403);
         }
 
