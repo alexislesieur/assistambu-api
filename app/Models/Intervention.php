@@ -16,6 +16,7 @@ class Intervention extends Model
         'patient_gender',
         'patient_age',
         'gestures',
+        'constants',
         'driving',
         'no_transport',
         'hospital_id',
@@ -25,6 +26,7 @@ class Intervention extends Model
     {
         return [
             'gestures'     => 'array',
+            'constants'    => 'array',
             'no_transport' => 'boolean',
             'patient_age'  => 'integer',
         ];
